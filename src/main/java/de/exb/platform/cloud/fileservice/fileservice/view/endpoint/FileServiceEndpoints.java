@@ -10,7 +10,7 @@ import java.net.URI;
 import java.util.Collections;
 
 @RestController
-@RequestMapping("/rs/directories/")
+@RequestMapping("/rs/directories")
 public class FileServiceEndpoints {
 
     @GetMapping
@@ -28,7 +28,8 @@ public class FileServiceEndpoints {
     }
 
     @PostMapping
-    public ResponseEntity<ItemResource<DirectoryResource>> post(@RequestBody DirectoryResource resource) {
+    public ResponseEntity<ItemResource<DirectoryResource>> post(@RequestBody DirectoryResource resource)
+    {
         return ResponseEntity.created(URI.create("/rs/directory"))
                 .body(ItemResource.<DirectoryResource>builder()
                         .item(resource)
@@ -50,14 +51,17 @@ public class FileServiceEndpoints {
 
 
     @GetMapping("{directoryId}/files")
-    public ResponseEntity<ItemResource<FileResource>> getFile(@PathVariable("directoryId") final Long id) {
+    public ResponseEntity<ItemResource<FileResource>> getFiles(@PathVariable("directoryId") final Long id)
+    {
         return ResponseEntity.ok().body(ItemResource.<FileResource>builder()
                 .items(Collections.emptyList())
                 .build());
     }
 
     @GetMapping("{directoryId}/files/{id}")
-    public ResponseEntity<ItemResource<FileResource>> getFile(@PathVariable("directoryId") final Long directoryId, @PathVariable("id") final Long id) {
+    public ResponseEntity<ItemResource<FileResource>> getFiles(@PathVariable("directoryId") final Long directoryId,
+            @PathVariable("id") final Long id)
+    {
         return ResponseEntity.ok()
                 .body(ItemResource.<FileResource>builder()
                         .item(FileResource.create(id))
@@ -65,7 +69,9 @@ public class FileServiceEndpoints {
     }
 
     @PostMapping("{directoryId}/files")
-    public ResponseEntity<ItemResource<FileResource>> post(@PathVariable("directoryId") final Long directoryId, FileResource resource) {
+    public ResponseEntity<ItemResource<FileResource>> postFile(@PathVariable("directoryId") final Long directoryId,
+            FileResource resource)
+    {
         return ResponseEntity.created(URI.create("/rs/directories"))
                 .body(ItemResource.<FileResource>builder()
                         .item(resource)
@@ -73,7 +79,9 @@ public class FileServiceEndpoints {
     }
 
     @PutMapping("{directoryId}/files/{id}")
-    public ResponseEntity<ItemResource<FileResource>> put(@PathVariable("directoryId") final Long directoryId, @PathVariable("id") final Long id, FileResource resource) {
+    public ResponseEntity<ItemResource<FileResource>> putFile(@PathVariable("directoryId") final Long directoryId,
+            @PathVariable("id") final Long id, FileResource resource)
+    {
         return ResponseEntity.ok()
                 .body(ItemResource.<FileResource>builder()
                         .item(resource)
