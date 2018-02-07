@@ -5,7 +5,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpStatus
 import spock.lang.Specification
 
-import static io.restassured.RestAssured.get
 import static io.restassured.RestAssured.given
 import static org.hamcrest.Matchers.hasItem
 import static org.hamcrest.Matchers.is
@@ -17,28 +16,29 @@ class FileServiceEndpointsTest extends Specification {
 
     def "should list directories"() {
         expect: "directories"
-        get("/rs/directories").then()
-                .assertThat()
+        given().that()
+        .when().get("/rs/directories")
+        .then().assertThat()
                 .statusCode(HttpStatus.OK.value())
-                .and()
+        .and()
                 .body("items.id", hasItem(1))
                 .log().all(true)
-
     }
 
     def "should show directory"() {
         expect: "directory 1"
-        get("/rs/directories/{id}", 1).then()
-                .assertThat()
+        given().that()
+
+        .when().get("/rs/directories/{id}", 1)
+
+        .then().assertThat()
                 .statusCode(HttpStatus.OK.value())
-                .and()
+        .and()
                 .body("item.id", is(1))
                 .log().all(true)
-
     }
 
-    def "shold create directory"() {
-
+    def "should create directory"() {
         expect: "directory 1 created"
         given().that()
                 .accept(ContentType.JSON)
@@ -46,94 +46,111 @@ class FileServiceEndpointsTest extends Specification {
                 .contentType(ContentType.JSON)
         .and()
                 .body(new File("${jsonDir}/directory1.json"))
+
         .when().post("/rs/directories")
 
         .then().assertThat()
                 .contentType(ContentType.JSON)
-                .and()
+        .and()
                 .statusCode(HttpStatus.CREATED.value())
-                .and()
+        .and()
                 .body("item.id", is(1))
                 .log().all(true)
-
-
     }
 
-    def "shold update directory"() {
-
-        expect: "directory 1 created"
+    def "should update directory"() {
+        expect: "directory 1 updated"
         given().that()
                 .accept(ContentType.JSON)
         .and()
                 .contentType(ContentType.JSON)
         .and()
                 .body(new File("${jsonDir}/directory1.json"))
+
         .when().put("/rs/directories/{id}", 1)
 
         .then().assertThat()
                 .contentType(ContentType.JSON)
-                .and()
+        .and()
                 .statusCode(HttpStatus.OK.value())
-                .and()
+        .and()
                 .body("item.id", is(1))
                 .log().all(true)
-
-
     }
-    def "should list files"() {
-        expect: "directories"
-        get("/rs/directories").then()
-                .assertThat()
-                .statusCode(HttpStatus.OK.value())
-                .and()
-                .body("items.id", hasItem(1))
+
+    def "should delete directory"() {
+        expect: "directory 1 deleted"
+        given().that()
+                .accept(ContentType.JSON)
+        .and()
+                .contentType(ContentType.JSON)
+        .when()
+                .delete("/rs/directories/{id}", 1)
+        .then().assertThat()
+                .statusCode(HttpStatus.NO_CONTENT.value())
                 .log().all(true)
 
+    }
+
+    def "should list files"() {
+        expect: "files"
+        given().that()
+
+        .when().get("/rs/directories/{id}/files", 1)
+
+        .then().assertThat()
+                .statusCode(HttpStatus.OK.value())
+        .and()
+                .body("items.id", hasItem(1))
+        .log().all(true)
     }
 
     def "should show file"() {
-        expect: "directory 1"
-        get("/rs/directories/{id}", 1).then()
-                .assertThat()
+        expect: "file 1"
+        given().that()
+
+        .when().get("/rs/directories/{directoryId}/files/{id}", 1, 1)
+
+        .then().assertThat()
                 .statusCode(HttpStatus.OK.value())
-                .and()
+        .and()
                 .body("item.id", is(1))
                 .log().all(true)
-
     }
 
-    def "shold create file"() {
-
-        expect: "directory 1 created"
+    def "should create file"() {
+        expect: "file 1 created"
         given().that()
+        .when()
                 .accept(ContentType.JSON)
         .and()
                 .contentType(ContentType.JSON)
         .and()
-                .body(new File("${jsonDir}/directory1.json"))
-        .when().post("/rs/directories")
+                .body(new File("${jsonDir}/file1.json"))
+        .when().post("/rs/directories/{id}/files", 1)
 
         .then().assertThat()
                 .contentType(ContentType.JSON)
-                .and()
+        .and()
                 .statusCode(HttpStatus.CREATED.value())
-                .and()
+        .and()
                 .body("item.id", is(1))
                 .log().all(true)
 
 
     }
 
-    def "shold update file"() {
+    def "should update file"() {
 
-        expect: "directory 1 created"
+        expect: "file 1 updated"
         given().that()
                 .accept(ContentType.JSON)
         .and()
                 .contentType(ContentType.JSON)
         .and()
-                .body(new File("${jsonDir}/directory1.json"))
-        .when().put("/rs/directories/{id}", 1)
+                .body(new File("${jsonDir}/file1.json"))
+
+        .when().put("/rs/directories/{directoryId}/files/{id}", 1, 1)
 
         .then().assertThat()
                 .contentType(ContentType.JSON)
@@ -144,6 +161,20 @@ class FileServiceEndpointsTest extends Specification {
                 .log().all(true)
 
 
+    }
+
+    def "should delete file"() {
+        expect: "file 1 deleted"
+        given().that()
+                .accept(ContentType.JSON)
+        .and()
+                .contentType(ContentType.JSON)
+
+        .when().delete("/rs/directories/{directoryId}/files/{id}", 1, 1)
+
+        .then().assertThat()
+                .statusCode(HttpStatus.NO_CONTENT.value())
+                .log().all(true)
     }
 
 }

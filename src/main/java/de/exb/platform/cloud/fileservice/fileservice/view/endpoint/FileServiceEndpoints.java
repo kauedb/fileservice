@@ -7,7 +7,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Collections;
+
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/rs/directories")
@@ -15,33 +19,46 @@ public class FileServiceEndpoints {
 
     @GetMapping
     public ResponseEntity<ItemResource<DirectoryResource>> get() {
-        return ResponseEntity.ok().body(ItemResource.<DirectoryResource>builder()
-                .items(Collections.singletonList(DirectoryResource.create(1L)))
-                .build());
+
+        final ItemResource<DirectoryResource> itemResource = ItemResource.<DirectoryResource>builder()
+                .items(Collections.singletonList(DirectoryResource.create(1L, "tmp", null))).build();
+
+        itemResource.add(linkTo(methodOn(FileServiceEndpoints.class).get()).withSelfRel());
+
+
+        return ResponseEntity.ok().body(itemResource);
     }
 
     @GetMapping("{id}")
     public ResponseEntity<ItemResource<DirectoryResource>> get(@PathVariable("id") final Long id) {
-        return ResponseEntity.ok().body(ItemResource.<DirectoryResource>builder()
-                .item(DirectoryResource.create(1L))
-                .build());
+
+        final ItemResource<DirectoryResource> itemResource = ItemResource.<DirectoryResource>builder()
+                .item(DirectoryResource.create(1L, "tmp", null)).build();
+
+        itemResource.add(linkTo(methodOn(FileServiceEndpoints.class).get(id)).withSelfRel());
+
+
+        return ResponseEntity.ok().body(itemResource);
     }
 
     @PostMapping
     public ResponseEntity<ItemResource<DirectoryResource>> post(@RequestBody DirectoryResource resource)
     {
-        return ResponseEntity.created(URI.create("/rs/directory"))
-                .body(ItemResource.<DirectoryResource>builder()
-                        .item(resource)
-                        .build());
+        final ItemResource<DirectoryResource> itemResource = ItemResource.<DirectoryResource>builder()
+                .item(DirectoryResource.create(1L, "tmp", null)).build();
+
+        itemResource.add(linkTo(methodOn(FileServiceEndpoints.class).post(resource)).withSelfRel());
+
+        return ResponseEntity.created(URI.create("/rs/directory")).body(itemResource);
     }
 
     @PutMapping("{id}")
     public ResponseEntity<ItemResource<DirectoryResource>> put(@PathVariable("id") final Long id, @RequestBody DirectoryResource resource) {
-        return ResponseEntity.ok()
-                .body(ItemResource.<DirectoryResource>builder()
-                        .item(resource)
-                        .build());
+        final ItemResource<DirectoryResource> itemResource = ItemResource.<DirectoryResource>builder().item(resource).build();
+
+        itemResource.add(linkTo(methodOn(FileServiceEndpoints.class).put(id, resource)).withSelfRel());
+
+        return ResponseEntity.ok().body(itemResource);
     }
 
     @DeleteMapping("{id}")
@@ -53,39 +70,45 @@ public class FileServiceEndpoints {
     @GetMapping("{directoryId}/files")
     public ResponseEntity<ItemResource<FileResource>> getFiles(@PathVariable("directoryId") final Long id)
     {
-        return ResponseEntity.ok().body(ItemResource.<FileResource>builder()
-                .items(Collections.emptyList())
-                .build());
+        final ItemResource<FileResource> itemResource = ItemResource.<FileResource>builder()
+                .items(Collections.singletonList(FileResource.create(1L, "hello.txt"))).build();
+
+        itemResource.add(linkTo(methodOn(FileServiceEndpoints.class).getFiles(id)).withSelfRel());
+
+        return ResponseEntity.ok().body(itemResource);
     }
 
     @GetMapping("{directoryId}/files/{id}")
     public ResponseEntity<ItemResource<FileResource>> getFiles(@PathVariable("directoryId") final Long directoryId,
             @PathVariable("id") final Long id)
     {
-        return ResponseEntity.ok()
-                .body(ItemResource.<FileResource>builder()
-                        .item(FileResource.create(id))
-                        .build());
+        final ItemResource<FileResource> itemResource = ItemResource.<FileResource>builder().item(FileResource.create(id, "hello.txt")).build();
+
+        itemResource.add(linkTo(methodOn(FileServiceEndpoints.class).getFiles(directoryId, id)).withSelfRel());
+
+        return ResponseEntity.ok().body(itemResource);
     }
 
     @PostMapping("{directoryId}/files")
     public ResponseEntity<ItemResource<FileResource>> postFile(@PathVariable("directoryId") final Long directoryId,
-            FileResource resource)
+            @RequestBody FileResource resource)
     {
-        return ResponseEntity.created(URI.create("/rs/directories"))
-                .body(ItemResource.<FileResource>builder()
-                        .item(resource)
-                        .build());
+        final ItemResource<FileResource> itemResource = ItemResource.<FileResource>builder().item(resource).build();
+
+        itemResource.add(linkTo(methodOn(FileServiceEndpoints.class).postFile(directoryId, resource)).withSelfRel());
+
+        return ResponseEntity.created(URI.create("/rs/directories")).body(itemResource);
     }
 
     @PutMapping("{directoryId}/files/{id}")
     public ResponseEntity<ItemResource<FileResource>> putFile(@PathVariable("directoryId") final Long directoryId,
-            @PathVariable("id") final Long id, FileResource resource)
+            @PathVariable("id") final Long id, @RequestBody FileResource resource)
     {
-        return ResponseEntity.ok()
-                .body(ItemResource.<FileResource>builder()
-                        .item(resource)
-                        .build());
+        final ItemResource<FileResource> itemResource = ItemResource.<FileResource>builder().item(resource).build();
+
+        itemResource.add(linkTo(methodOn(FileServiceEndpoints.class).putFile(directoryId, id, resource)).withSelfRel());
+
+        return ResponseEntity.ok().body(itemResource);
     }
 
 

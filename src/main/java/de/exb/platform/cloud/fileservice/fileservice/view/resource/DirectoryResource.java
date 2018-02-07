@@ -11,4 +11,8 @@ public class DirectoryResource {
 
     Long id;
 
+    String name;
+
+    DirectoryResource parent;
+
 }
