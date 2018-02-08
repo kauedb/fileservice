@@ -1,13 +1,14 @@
 package de.exb.platform.cloud.fileservice.fileservice.view.endpoint;
 
+import de.exb.platform.cloud.fileservice.fileservice.application.FileApplicationService;
 import de.exb.platform.cloud.fileservice.fileservice.view.resource.DirectoryResource;
 import de.exb.platform.cloud.fileservice.fileservice.view.resource.FileResource;
 import de.exb.platform.cloud.fileservice.fileservice.view.resource.ItemResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.inject.Inject;
 import java.net.URI;
-import java.util.Arrays;
 import java.util.Collections;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
@@ -16,6 +17,13 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 @RestController
 @RequestMapping("/rs/directories")
 public class FileServiceEndpoints {
+
+    private final FileApplicationService fileApplicationService;
+
+    @Inject
+    public FileServiceEndpoints(FileApplicationService fileApplicationService) {
+        this.fileApplicationService = fileApplicationService;
+    }
 
     @GetMapping
     public ResponseEntity<ItemResource<DirectoryResource>> get() {

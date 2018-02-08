@@ -40,6 +40,8 @@ dependencies {
 
     compile "org.springframework.boot:spring-boot-starter-hateoas"
     testCompile "com.jayway.jsonpath:json-path"
+
+    compile group: 'javax.inject', name: 'javax.inject', version: '1'
 }
 
 task ping {
