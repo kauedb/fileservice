@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.inject.Inject;
 import java.net.URI;
 import java.util.Collections;
+import java.util.Optional;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
@@ -28,32 +29,53 @@ public class FileServiceEndpoints {
     @GetMapping
     public ResponseEntity<ItemResource<DirectoryResource>> get() {
 
-        final ItemResource<DirectoryResource> itemResource = ItemResource.<DirectoryResource>builder()
-                .items(Collections.singletonList(DirectoryResource.create(1L, "tmp", null))).build();
+        final Optional<ItemResource<DirectoryResource>> optional = fileApplicationService.getDirectories();
 
-        itemResource.add(linkTo(methodOn(FileServiceEndpoints.class).get()).withSelfRel());
+        if (optional.isPresent())
+        {
 
+            final ItemResource<DirectoryResource> itemResource = optional.get();
 
-        return ResponseEntity.ok().body(itemResource);
+            itemResource.add(linkTo(methodOn(FileServiceEndpoints.class).get()).withSelfRel());
+
+            return ResponseEntity.ok().body(itemResource);
+
+        }
+        else
+        {
+
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @GetMapping("{id}")
     public ResponseEntity<ItemResource<DirectoryResource>> get(@PathVariable("id") final Long id) {
 
-        final ItemResource<DirectoryResource> itemResource = ItemResource.<DirectoryResource>builder()
-                .item(DirectoryResource.create(1L, "tmp", null)).build();
+        final Optional<ItemResource<DirectoryResource>> optional = fileApplicationService.getDirectories(id);
 
-        itemResource.add(linkTo(methodOn(FileServiceEndpoints.class).get(id)).withSelfRel());
+        if (optional.isPresent())
+        {
 
+            final ItemResource<DirectoryResource> itemResource = optional.get();
 
-        return ResponseEntity.ok().body(itemResource);
+            itemResource.add(linkTo(methodOn(FileServiceEndpoints.class).get(id)).withSelfRel());
+
+            return ResponseEntity.ok().body(itemResource);
+
+        }
+        else
+        {
+
+            return ResponseEntity.notFound().build();
+        }
+
     }
 
     @PostMapping
     public ResponseEntity<ItemResource<DirectoryResource>> post(@RequestBody DirectoryResource resource)
     {
         final ItemResource<DirectoryResource> itemResource = ItemResource.<DirectoryResource>builder()
-                .item(DirectoryResource.create(1L, "tmp", null)).build();
+                .item(DirectoryResource.create(1L, "tmp")).build();
 
         itemResource.add(linkTo(methodOn(FileServiceEndpoints.class).post(resource)).withSelfRel());
 

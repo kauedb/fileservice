@@ -17,7 +17,9 @@ class FileServiceEndpointsTest extends Specification {
     def "should list directories"() {
         expect: "directories"
         given().that()
+
         .when().get("/rs/directories")
+
         .then().assertThat()
                 .statusCode(HttpStatus.OK.value())
         .and()
@@ -26,15 +28,15 @@ class FileServiceEndpointsTest extends Specification {
     }
 
     def "should show directory"() {
-        expect: "directory 1"
+        expect: "directory 2"
         given().that()
 
-        .when().get("/rs/directories/{id}", 1)
+        .when().get("/rs/directories/{id}", 2)
 
         .then().assertThat()
                 .statusCode(HttpStatus.OK.value())
         .and()
-                .body("item.id", is(1))
+                .body("item.id", is(2))
                 .log().all(true)
     }
 
