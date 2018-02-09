@@ -2,15 +2,21 @@ package de.exb.platform.cloud.fileservice.fileservice.application;
 
 import de.exb.platform.cloud.fileservice.fileservice.domain.FileService;
 import de.exb.platform.cloud.fileservice.fileservice.domain.FileServiceException;
+import de.exb.platform.cloud.fileservice.fileservice.infrastructure.repository.FileRepository;
+import de.exb.platform.cloud.fileservice.fileservice.infrastructure.repository.RepositoryNotFoundException;
 import de.exb.platform.cloud.fileservice.fileservice.view.resource.DirectoryResource;
 import de.exb.platform.cloud.fileservice.fileservice.view.resource.ItemResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.net.URL;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Named
@@ -20,34 +26,37 @@ public class FileApplicationServiceImpl implements FileApplicationService {
 
     private final FileService fileService;
 
-    private final Map<Long, String> repository = new HashMap<Long, String>()
-    {
-        {
-            put(1L, "/");
-            put(2L, "/tmp/");
-        }
-    };
+    private final FileRepository fileRepository;
 
+    private final String rootDir;
 
     @Inject
-    public FileApplicationServiceImpl(FileService fileService) {
+    public FileApplicationServiceImpl(FileService fileService, FileRepository fileRepository,
+            @Value("${directory.server.rootDir}") String rootDir)
+    {
         this.fileService = fileService;
+        this.fileRepository = fileRepository;
+        this.rootDir = rootDir;
     }
 
     @Override
     public Optional<ItemResource<DirectoryResource>> getDirectories()
     {
+        final String aSessionId = UUID.randomUUID().toString();
 
         try {
 
-            final String aSessionId = UUID.randomUUID().toString();
-
-            final URL url = fileService.construct(aSessionId, "/");
+            final URL url = fileService.construct(aSessionId, rootDir);
 
             final List<URL> list = fileService.list(aSessionId, url);
 
+            final Map<Long, String> all = fileRepository.findAll();
+
             final List<DirectoryResource> directories = list.stream()
-                    .map(e -> DirectoryResource.create(1L, e.getFile())).collect(Collectors.toList());
+                    .map(e -> {
+                        return DirectoryResource.create(1L, e.getPath());
+                    })
+                    .collect(Collectors.toList());
 
             if (directories.isEmpty())
             {
@@ -71,14 +80,14 @@ public class FileApplicationServiceImpl implements FileApplicationService {
     @Override
     public Optional<ItemResource<DirectoryResource>> getDirectories(Long id)
     {
+        final String aSessionId = UUID.randomUUID().toString();
+
         try
         {
 
-            final String path = repository.get(id);
+            final String path = fileRepository.find(id);
 
-            final String aSessionId = UUID.randomUUID().toString();
-
-            final URL url = fileService.construct(aSessionId, "/");
+            final URL url = fileService.construct(aSessionId, rootDir);
 
             final List<URL> list = fileService.list(aSessionId, url);
 
@@ -101,9 +110,9 @@ public class FileApplicationServiceImpl implements FileApplicationService {
             }
 
         }
-        catch (FileServiceException e)
+        catch (FileServiceException | RepositoryNotFoundException e)
         {
-            LOGGER.error(e.getLocalizedMessage());
+            LOGGER.warn(e.getLocalizedMessage());
             throw new ApplicationException(e);
         }
     }
@@ -112,26 +121,17 @@ public class FileApplicationServiceImpl implements FileApplicationService {
     public Optional<ItemResource<DirectoryResource>> createDirectory(DirectoryResource directoryResource)
     {
 
-
-        long newId = Collections.max(repository.keySet()) + 1;
-
-        final String path = repository.put(newId, directoryResource.getPath());
-
-        if (path == null)
-        {
-            return Optional.empty();
-        }
-
         final String aSessionId = UUID.randomUUID().toString();
 
         final String newPath = directoryResource.getPath();
 
         try
         {
+            final URL url = fileService.construct(aSessionId, newPath);
 
-            final URL urlToCreate = fileService.construct(aSessionId, newPath);
+            fileService.createNewFile(aSessionId, url);
 
-            fileService.createNewFile(aSessionId, urlToCreate);
+            long newId = fileRepository.create(newPath);
 
             final ItemResource<DirectoryResource> itemResource = ItemResource.<DirectoryResource>builder()
                     .item(DirectoryResource.create(newId, newPath)).build();
@@ -141,7 +141,7 @@ public class FileApplicationServiceImpl implements FileApplicationService {
         }
         catch (FileServiceException e)
         {
-            LOGGER.error(e.getLocalizedMessage());
+            LOGGER.warn(e.getLocalizedMessage());
             throw new ApplicationException(e);
         }
 
@@ -150,64 +150,33 @@ public class FileApplicationServiceImpl implements FileApplicationService {
     @Override
     public Optional<ItemResource<DirectoryResource>> updateDirectory(Long id, DirectoryResource directoryResource)
     {
-        final String path = repository.get(id);
 
-        if (path == null)
-        {
-            return Optional.empty();
-        }
+        deleteDirectory(id);
 
-        final String aSessionId = UUID.randomUUID().toString();
-
-        final String newPath = directoryResource.getPath();
-
-        try
-        {
-            final URL urlToDelete = fileService.construct(aSessionId, path);
-
-            fileService.delete(aSessionId, urlToDelete, false);
-
-            final URL urlToCreate = fileService.construct(aSessionId, newPath);
-
-            fileService.createNewFile(aSessionId, urlToCreate);
-
-            final ItemResource<DirectoryResource> itemResource = ItemResource.<DirectoryResource>builder()
-                    .item(DirectoryResource.create(id, newPath)).build();
-
-            return Optional.of(itemResource);
-
-        }
-        catch (FileServiceException e)
-        {
-            LOGGER.error(e.getLocalizedMessage());
-            throw new ApplicationException(e);
-        }
-
+        return createDirectory(directoryResource);
     }
 
     @Override
     public Optional<ItemResource<DirectoryResource>> deleteDirectory(Long id)
     {
-        final String path = repository.get(id);
-
-        if (path == null)
-        {
-            throw new ApplicationException();
-        }
 
         final String aSessionId = UUID.randomUUID().toString();
 
         try
         {
+            final String path = fileRepository.find(id);
+
             final URL url = fileService.construct(aSessionId, path);
 
             fileService.delete(aSessionId, url, false);
 
+            fileRepository.delete(id);
+
             return Optional.empty();
         }
-        catch (FileServiceException e)
+        catch (FileServiceException | RepositoryNotFoundException e)
         {
-            LOGGER.error(e.getLocalizedMessage());
+            LOGGER.warn(e.getLocalizedMessage());
             throw new ApplicationException(e);
         }
 

@@ -7,7 +7,9 @@ import spock.lang.Specification
 
 import static io.restassured.RestAssured.given
 import static org.hamcrest.Matchers.hasItem
+import static org.hamcrest.Matchers.hasSize
 import static org.hamcrest.Matchers.is
+import static org.hamcrest.Matchers.notNullValue
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class FileServiceEndpointsTest extends Specification {
@@ -23,7 +25,7 @@ class FileServiceEndpointsTest extends Specification {
         .then().assertThat()
                 .statusCode(HttpStatus.OK.value())
         .and()
-                .body("items.id", hasItem(1))
+                .body("items", hasSize(2))
                 .log().all(true)
     }
 
@@ -56,7 +58,8 @@ class FileServiceEndpointsTest extends Specification {
         .and()
                 .statusCode(HttpStatus.CREATED.value())
         .and()
-                .body("item.id", is(1))
+                .body("item.id", notNullValue())
+                .body("item.path", is("/tmp/dir1"))
                 .log().all(true)
     }
 
