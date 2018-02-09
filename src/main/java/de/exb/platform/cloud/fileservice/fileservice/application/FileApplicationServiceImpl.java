@@ -185,4 +185,32 @@ public class FileApplicationServiceImpl implements FileApplicationService {
 
     }
 
+    @Override
+    public Optional<ItemResource<DirectoryResource>> deleteDirectory(Long id)
+    {
+        final String path = repository.get(id);
+
+        if (path == null)
+        {
+            throw new ApplicationException();
+        }
+
+        final String aSessionId = UUID.randomUUID().toString();
+
+        try
+        {
+            final URL url = fileService.construct(aSessionId, path);
+
+            fileService.delete(aSessionId, url, false);
+
+            return Optional.empty();
+        }
+        catch (FileServiceException e)
+        {
+            LOGGER.error(e.getLocalizedMessage());
+            throw new ApplicationException(e);
+        }
+
+    }
+
 }

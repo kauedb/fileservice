@@ -74,32 +74,66 @@ public class FileServiceEndpoints {
     @PostMapping
     public ResponseEntity<ItemResource<DirectoryResource>> post(@RequestBody DirectoryResource resource)
     {
-        final ItemResource<DirectoryResource> itemResource = ItemResource.<DirectoryResource>builder()
-                .item(DirectoryResource.create(1L, "tmp")).build();
+        final Optional<ItemResource<DirectoryResource>> optional = fileApplicationService.createDirectory(resource);
 
-        itemResource.add(linkTo(methodOn(FileServiceEndpoints.class).post(resource)).withSelfRel());
+        if (optional.isPresent())
+        {
 
-        return ResponseEntity.created(URI.create("/rs/directory")).body(itemResource);
+            final ItemResource<DirectoryResource> itemResource = optional.get();
+
+            itemResource.add(linkTo(methodOn(FileServiceEndpoints.class).post(resource)).withSelfRel());
+
+            return ResponseEntity.created(URI.create("/rs/directory")).body(itemResource);
+        }
+        else
+        {
+            return ResponseEntity.notFound().build();
+        }
+
     }
 
     @PutMapping("{id}")
     public ResponseEntity<ItemResource<DirectoryResource>> put(@PathVariable("id") final Long id, @RequestBody DirectoryResource resource) {
-        final ItemResource<DirectoryResource> itemResource = ItemResource.<DirectoryResource>builder().item(resource).build();
 
-        itemResource.add(linkTo(methodOn(FileServiceEndpoints.class).put(id, resource)).withSelfRel());
+        final Optional<ItemResource<DirectoryResource>> optional = fileApplicationService.updateDirectory(id, resource);
 
-        return ResponseEntity.ok().body(itemResource);
+        if (optional.isPresent())
+        {
+            final ItemResource<DirectoryResource> itemResource = optional.get();
+
+            itemResource.add(linkTo(methodOn(FileServiceEndpoints.class).put(id, resource)).withSelfRel());
+
+            return ResponseEntity.ok().body(itemResource);
+
+        }
+        else
+        {
+            return ResponseEntity.notFound().build();
+        }
+
     }
 
     @DeleteMapping("{id}")
     public ResponseEntity delete(@PathVariable("id") final Long id) {
-        return ResponseEntity.noContent().build();
+
+        final Optional<ItemResource<DirectoryResource>> optional = fileApplicationService.deleteDirectory(id);
+
+        if (optional.isPresent())
+        {
+            return ResponseEntity.noContent().build();
+        }
+        else
+        {
+            return ResponseEntity.notFound().build();
+        }
+
     }
 
 
     @GetMapping("{directoryId}/files")
     public ResponseEntity<ItemResource<FileResource>> getFiles(@PathVariable("directoryId") final Long id)
     {
+
         final ItemResource<FileResource> itemResource = ItemResource.<FileResource>builder()
                 .items(Collections.singletonList(FileResource.create(1L, "hello.txt"))).build();
 

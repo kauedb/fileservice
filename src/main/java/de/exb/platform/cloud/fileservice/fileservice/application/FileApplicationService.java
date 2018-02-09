@@ -14,4 +14,6 @@ public interface FileApplicationService {
     Optional<ItemResource<DirectoryResource>> createDirectory(DirectoryResource directoryResource);
 
     Optional<ItemResource<DirectoryResource>> updateDirectory(Long id, DirectoryResource directoryResource);
+
+    Optional<ItemResource<DirectoryResource>> deleteDirectory(Long id);
 }
